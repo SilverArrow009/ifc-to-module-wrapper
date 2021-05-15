@@ -2,6 +2,7 @@
 # read the interface file
 set fp [open [lindex $argv 0] "r"]
 set lock 0
+array set lock_arr {}
 
 while {[gets $fp line] >= 0} {\
     if {[regexp {interface.*;} $line]} {\
@@ -10,27 +11,30 @@ while {[gets $fp line] >= 0} {\
     if {[regexp {logic | bit| wire | reg} $line]} {\
         lappend terms $line
     } elseif {[regexp {modport .*;} $line]} {\
+        set lock 0
         lappend modport [lindex [regexp -inline {modport (.*) \((.*)\);} $line] 1] [lindex [regexp -inline {modport (.*) \((.*)\);} $line] 2]
+        set lock_arr([lindex [regexp -inline {modport (.*) \((.*)\);} $line] 1]) $lock
         # modport contains modport name and ports as list
     } elseif {[regexp {modport .*} $line]} {\
         lappend modport [lindex [regexp -inline {modport (.*) \(} $line] 1]
         set port_string ""
         set lock 1
+        set lock_arr([lindex [regexp -inline {modport (.*) \(} $line] 1]) $lock
     }
     if {[regexp {input|output} $line] && ($lock == 1)} {\
-        set port_string [concat $port_string "_DEL_" $line]
+        set port_string [concat $port_string "*" $line]
     } elseif {[regexp {\);} $line] && ($lock == 1)} {\
-        lappend modport $port_string;
+        lappend modport [string trimleft $port_string "*"]
     }
 }
 
 close $fp
-puts $modport
 set mp_name [lindex $argv 2]
 array set modport_arr $modport
+set lock $lock_arr($mp_name)
 
 if {$lock} {\
-    set port_list [split $modport_arr($mp_name) "_DEL_"]
+    set port_list [split $modport_arr($mp_name) "*"]
 } else {\
     set port_list $modport_arr($mp_name)
 }
@@ -52,7 +56,7 @@ set fp [open $file_name "w"]
 if {$lock == 1} {\
     lappend data "module $mod_name ("
     foreach port $port_list {\
-        lappend data $port
+        lappend data "\t$port"
     }
     lappend data ");\n"
 } else {\
