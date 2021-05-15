@@ -17,3 +17,6 @@ interface sample_ifc;
     logic [1:0] b;
     modport id (input a, output b);
 endinterface //sample_ifc
+
+Usage:
+    ifc2mod.tcl <interface_file_name> <module_name> <modport_name> <comb>
