@@ -10,7 +10,7 @@ while {[gets $fp line] >= 0} {\
     if {[regexp {logic | bit| wire | reg} $line]} {\
         lappend terms $line
     } elseif {[regexp {modport .*;} $line]} {\
-        set modport [lrange [regexp -inline {modport (.*) \((.*)\);} $line] 1 2]
+        lappend modport [lindex [regexp -inline {modport (.*) \((.*)\);} $line] 1] [lindex [regexp -inline {modport (.*) \((.*)\);} $line] 2]
         # modport contains modport name and ports as list
     } elseif {[regexp {modport .*} $line]} {\
         lappend modport [lindex [regexp -inline {modport (.*) \(} $line] 1]
@@ -25,20 +25,21 @@ while {[gets $fp line] >= 0} {\
 }
 
 close $fp
-
-set mp_name [lindex $modport 0]
+puts $modport
+set mp_name [lindex $argv 2]
+array set modport_arr $modport
 
 if {$lock} {\
-    set port_list [split [lindex $modport 1] "_DEL_"]
+    set port_list [split $modport_arr($mp_name) "_DEL_"]
 } else {\
-    set port_list [lindex $modport 1]
+    set port_list $modport_arr($mp_name)
 }
 
 foreach term $terms {\
     lappend term_names [lindex [regexp -inline {.* (.*);} [string trim $term]] 1]
 }
 # bit to generate combinational or sequential logic for wrapper
-set comb [lindex $argv 2]
+set comb [lindex $argv 3]
 
 # Create the hdl wrapper
 
@@ -47,6 +48,7 @@ set file_name "$mod_name\_wrapper.sv"
 set fp [open $file_name "w"]
 
 # Output
+# Format module ports in single line or multi line format
 if {$lock == 1} {\
     lappend data "module $mod_name ("
     foreach port $port_list {\
@@ -56,6 +58,7 @@ if {$lock == 1} {\
 } else {\
     lappend data "module $mod_name ($port_list);\n"
 }
+# Redeclaration of all the ports. uncomment to print, but may cause errors in generated output
 # foreach port $terms {\
 #     lappend data $port
 # }
