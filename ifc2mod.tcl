@@ -78,7 +78,7 @@ foreach term $term_names {\
 }
 lappend data "\tend\n"
 lappend data "\t[concat $mod_name "inst0 (if0.$mp_name);"]\n"
-lappend data "endmodule : $mod_name"
+lappend data "endmodule : $mod_name\_wrapper"
 
 #Write the data and close the file
 foreach line $data {\
