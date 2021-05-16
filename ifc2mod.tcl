@@ -32,16 +32,35 @@ close $fp
 set mp_name [lindex $argv 2]
 array set modport_arr $modport
 set lock $lock_arr($mp_name)
+array set dir_of {}
+array set type_of {}
 
 if {$lock} {\
     set port_list [split $modport_arr($mp_name) "*"]
+    foreach tmp $port_list {\
+        set tmp [string trim $tmp ", "]
+        set tmp_lst1 [split $tmp " "]
+        set dir_of([lindex $tmp_lst1 1]) [lindex $tmp_lst1 0]
+    }
 } else {\
     set port_list $modport_arr($mp_name)
+    set tmp_lst [split $port_list ","]
+    foreach tmp $tmp_lst {\
+        set tmp [string trim $tmp]
+        set tmp_lst1 [split $tmp " "]
+        set dir_of([lindex $tmp_lst1 1]) [lindex $tmp_lst1 0]
+        lappend active_term_names [lindex $tmp_lst1 1]     
+    }
 }
-
+parray dir_of
 foreach term $terms {\
-    lappend term_names [lindex [regexp -inline {.* (.*);} [string trim $term]] 1]
+    set match_str [lindex [regexp -inline {.* (.*);} [string trim $term]] 1]
+    set match_str "$match_str;"
+    set blank ""
+    regsub -all $match_str $term $blank type
+    set type_of([string trimright $match_str ";"]) $type
 }
+parray type_of
 # bit to generate combinational or sequential logic for wrapper
 set comb [lindex $argv 3]
 
@@ -53,19 +72,14 @@ set fp [open $file_name "w"]
 
 # Output
 # Format module ports in single line or multi line format
-if {$lock == 1} {\
-    lappend data "module $mod_name\_wrapper ("
-    foreach port $port_list {\
-        lappend data "\t$port"
-    }
-    lappend data ");\n"
-} else {\
-    lappend data "module $mod_name\_wrapper ($port_list);\n"
+
+lappend data "module $mod_name\_wrapper ("
+foreach term $active_term_names {\
+    lappend data "\t$dir_of($term) $type_of($term) $term,"
 }
-# Redeclaration of all the ports. uncomment to print, but may cause errors in generated output
-# foreach port $terms {\
-#     lappend data $port
-# }
+set temp [string trimright [lindex $data end] ","]
+set data [lreplace $data end end $temp]
+lappend data ");\n"
 lappend data "\n\t$ifname if0;"
 
 if {$comb} {\
@@ -73,7 +87,7 @@ if {$comb} {\
 } else {\
     lappend data "\n\talways_ff @(posedge clk) begin"
 }
-foreach term $term_names {\
+foreach term $active_term_names {\
     lappend data "\t\tif0.$term\t=\t$term;"
 }
 lappend data "\tend\n"
