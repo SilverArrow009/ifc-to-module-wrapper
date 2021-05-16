@@ -41,6 +41,7 @@ if {$lock} {\
         set tmp [string trim $tmp ", "]
         set tmp_lst1 [split $tmp " "]
         set dir_of([lindex $tmp_lst1 1]) [lindex $tmp_lst1 0]
+        lappend active_term_names [lindex $tmp_lst1 1]
     }
 } else {\
     set port_list $modport_arr($mp_name)
@@ -52,7 +53,7 @@ if {$lock} {\
         lappend active_term_names [lindex $tmp_lst1 1]     
     }
 }
-parray dir_of
+#debug parray dir_of
 foreach term $terms {\
     set match_str [lindex [regexp -inline {.* (.*);} [string trim $term]] 1]
     set match_str "$match_str;"
@@ -60,7 +61,7 @@ foreach term $terms {\
     regsub -all $match_str $term $blank type
     set type_of([string trimright $match_str ";"]) $type
 }
-parray type_of
+#debug parray type_of
 # bit to generate combinational or sequential logic for wrapper
 set comb [lindex $argv 3]
 
