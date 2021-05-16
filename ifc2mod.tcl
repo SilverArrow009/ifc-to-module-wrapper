@@ -60,7 +60,7 @@ if {$lock == 1} {\
     }
     lappend data ");\n"
 } else {\
-    lappend data "module $mod_name ($port_list);\n"
+    lappend data "module $mod_name\_wrapper ($port_list);\n"
 }
 # Redeclaration of all the ports. uncomment to print, but may cause errors in generated output
 # foreach port $terms {\
