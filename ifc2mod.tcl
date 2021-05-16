@@ -54,7 +54,7 @@ set fp [open $file_name "w"]
 # Output
 # Format module ports in single line or multi line format
 if {$lock == 1} {\
-    lappend data "module $mod_name ("
+    lappend data "module $mod_name\_wrapper ("
     foreach port $port_list {\
         lappend data "\t$port"
     }
