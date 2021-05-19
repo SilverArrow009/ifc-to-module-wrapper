@@ -86,7 +86,7 @@ lappend data "\n\t$ifname if0;"
 if {$comb} {\
     lappend data "\n\talways_comb begin"
     foreach term $active_term_names {\
-        if {$type_of($term) == "input"} {\
+        if {$dir_of($term) == "input"} {\
             lappend data "\t\tif0.$term\t=\t$term;"
         } else {\
             lappend data "\t\t$term\t=\tif0.$term;"
@@ -95,7 +95,7 @@ if {$comb} {\
 } else {\
     lappend data "\n\talways_ff @(posedge clk) begin"
     foreach term $active_term_names {\
-        if {$type_of($term) == "input"} {\
+        if {$dir_of($term) == "input"} {\
             lappend data "\t\tif0.$term\t<=\t$term;"
         } else {\
             lappend data "\t\t$term\t<=\tif0.$term;"
